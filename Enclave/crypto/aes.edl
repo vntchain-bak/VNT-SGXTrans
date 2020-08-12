@@ -1,0 +1,6 @@
+enclave {
+    trusted {
+        public int aes_encrypt([in, size=32768] char *in, [in, size=32768] char *key, [out, size=32768] char *out);
+        public int aes_decrypt([in, size=32768] char *in, [in, size=32768] char *key, [out, size=32768] char *out);
+    };
+};

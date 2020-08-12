@@ -1,0 +1,9 @@
+enclave {
+    trusted {
+        public void ecall_handler_init();
+        public void ecall_test_handle();
+        public void handle_write_val([in, size=21]char* key, [in, size=101]char* val);
+        public void handle_just([in, size=21]char* key);
+        public void handle_read_val([in, size=21]char* key, [out, size=32768]char* val, [out]int* total_num);
+    };
+};

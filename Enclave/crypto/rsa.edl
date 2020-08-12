@@ -1,0 +1,10 @@
+enclave {
+    trusted {        
+        /*
+        * void generateRSAKey();
+        * void getRSAKey([out, size=2048] char* pub, [out, size=2048] char* pri);
+        * void rsa_pub_encrypt([out, size=2048] char* etext, [in, size=2048] const char* ctext, [in, size=2048] const char* pub);
+        * void rsa_pri_decrypt([out, size=2048] char* ctext, [in, size=2048] const char* etext, [in, size=2048] const char* pri);  
+        */
+    };
+};

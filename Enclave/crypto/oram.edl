@@ -1,0 +1,9 @@
+enclave {
+    trusted {
+        
+    };
+    untrusted {
+        void ocall_read_to_buffer([in, size=20]char* filename, [out, size=32768] char* buffer, int offset, int size);
+        void ocall_write_to_file([in, size=20]char* filename, [in, size=32768] char* data, int offset, int size);
+    };
+};
