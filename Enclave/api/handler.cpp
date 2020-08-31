@@ -67,37 +67,15 @@ void handle_just(char* key)
 
 void ecall_test_handle()
 {
-    // std::map<std::string, int> test;
-    // test.insert(std::pair<std::string, int>("123\000456",1));
-    // test["123"]=2;
-    // printf("test: %d\n",test.size());
-    // char key1[KEYSIZE]="1111k";
-    // char key2[KEYSIZE]="2222k";
-    // char val1[VALSIZE]="1111y";
-    // char val2[VALSIZE]="2222y";
-    // write_val(key1, val1);
-    // write_val(key2, val2);
-    // write_val(key1, val2);
-    // char val[2048]={'\0'};
-    // int num;
-    // read_val(key1,val,&num);
-    // printf("%d\n",num);
-    // read_val(key2, val, &num);
-    // printf("%d\n", num);
+    
     char key[21]="1111";
     char val[21]="1111";
     key[20] = '\0';
     val[20] = '\0';
     write_val(key,val);
-    // clock_t total_time=0;
     for(int i=0;i<1000;i++)
     {
-        // std::string k="kkkk";
-        // k+=(char)('0'+i);
-        // std::string v="vvvv";
-        // v+=(char)('0'+i);
-        // memcpy(key, k.c_str(), k.length()+1);
-        // memcpy(val, v.c_str(), v.length()+1);
+
         sgx_read_rand((unsigned char *)key, KEYSIZE);
         sgx_read_rand((unsigned char *)val, KEYSIZE);
         for(int j=0;j<20;j++)
@@ -107,15 +85,11 @@ void ecall_test_handle()
             key[j]+='0';
             val[j]+='0';
         }
-        // clock_t begin = clock();
         write_val(key,val);
-        // clock_t end = clock();
-        // total_time+=(end-begin);
     }
     char ret[2048];
     int num;
     read_val("1111",ret,&num);
-    // read_val("kkkk9", ret, &num);
     printf("read %d record(s). ",num);
 }
 
