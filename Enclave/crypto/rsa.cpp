@@ -53,25 +53,6 @@ void generateRSAKey()
     strncpy(publicKey, pub_key, pub_len+1);
     strncpy(privateKey, pri_key, pri_len+1);
 
-    // 存储到磁盘（这种方式存储的是begin rsa public key/ begin rsa private key开头的）
-    // FILE *pubFile = fopen(PUB_KEY_FILE, "w");
-    // if (pubFile == NULL)
-    // {
-    //     assert(false);
-    //     return;
-    // }
-    // fputs(pub_key, pubFile);
-    // fclose(pubFile);
-
-    // FILE *priFile = fopen(PRI_KEY_FILE, "w");
-    // if (priFile == NULL)
-    // {
-    //     assert(false);
-    //     return;
-    // }
-    // fputs(pri_key, priFile);
-    // fclose(priFile);
-
     // 内存释放
     RSA_free(keypair);
     BIO_free(pri);
@@ -90,11 +71,7 @@ void getRSAKey(char* pub, char* pri)
 void rsa_pub_encrypt(char* etext,const char* ctext, const char* pub)  
 {  
     BIO *keybio = BIO_new_mem_buf(pub, -1);  
-    // 此处有三种方法  
-    // 1, 读取内存里生成的密钥对，再从内存生成rsa  
-    // 2, 读取磁盘里生成的密钥对文本文件，在从内存生成rsa  
-    // 3，直接从读取文件指针生成rsa  
-    RSA* rsa = PEM_read_bio_RSAPublicKey(keybio, NULL, NULL, NULL);  
+, NULL, NULL, NULL);  
   
     int len = RSA_size(rsa);   
     memset(etext, 0, len + 1);  
@@ -113,11 +90,7 @@ void rsa_pub_encrypt(char* etext,const char* ctext, const char* pub)
 void rsa_pri_decrypt(char* ctext, const char* etext, const char* pri)  
 {   
     BIO *keybio = BIO_new_mem_buf(pri, -1);  
-  
-    // 此处有三种方法  
-    // 1, 读取内存里生成的密钥对，再从内存生成rsa  
-    // 2, 读取磁盘里生成的密钥对文本文件，在从内存生成rsa  
-    // 3，直接从读取文件指针生成rsa  
+
     RSA* rsa = PEM_read_bio_RSAPrivateKey(keybio, NULL, NULL, NULL);  
   
     int len = RSA_size(rsa);  
