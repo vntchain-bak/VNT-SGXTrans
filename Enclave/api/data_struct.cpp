@@ -5,137 +5,70 @@
 #include <map>
 #include <vector>
 
-class DataVal
+
+class raw_DataEntry
 {
-    std::vector<std::string> val;
-    int val_name;
-    int val_type;
-    int val_size;
-
-    int val_num;
-
-    DataVal(int val_name, int val_type, int val_size)
-    {
-        this.val_name = val_name;
-        this.val_type = val_type;
-        this.val_size = val_size;
-        this.val_num = 0;
-    }
-
-    int add(std::string val) //返回增加的val长度
-    {
-        val_list.push_back(val);
-        val_num++;
-        return val_size;
-    }
-
-    std::vector<std::string> to_raw_data()
-    {
-        //
-    }
-};
-
-class DataValListCreator
-{
-    int val_name_num;
-    std::vector<std::string> val_name;
-    std::vector<int> val_type;
-
-    DataValListCreator(std::string table_name)
-    {
-        std::string tmp = read_data_val_from_file(table_name);
-        //拆分tmp获取对应数据
-    }
-
-    int create(std::vector<std::string> raw_entry_data, std::vector<DataVal*>& entry_data)
-    {
-        int start = val_name_num;
-        int total_size=0;
-
-        for(int i=0;i<val_name_num;++i)
-        {
-            int val_num = std::stoi(raw_entry_data[i]);
-            int val_size = this.get_val_size(val_type[i]);
-
-            DataVal* new_data_val = new DataVal(val_name[i], val_type[i]);
-            for(int j=0;j<val_num;++j)
-            {
-                total_size += new_data_val->add(raw_entry_data[start+j]);
-            }
-            entry_data.push_back(new_data_val);
-            start+=val_num;
-        }
-        return total_size;
-    }
-
-    int get_val_size(int type)
-    {
-        //返回根据type类型预设的长度值
-    }
-
-};
-
-class DataEntry 
-{
-    DataValListCreator* data_val_list_creator;
-    std::vector<DataVal*> entry_data; //存放所有的val
-    std::string key; 
+private:
+    std::string entry_data; //存放所有的val
+    std::string entry_key; 
+    bool is_valid;
     int position; //该条目在页表中的具体位置，不一定与path相同
     int group; //该条目在同一key下的位次
     int entry_size; //由key_size、head_size和val_size组成，前两者在定义时确定
-    int entry_max_size=1024; //之后设计为可修改
-    
-    DataEntry(std::vector<std::string> raw_entry_data, DataValListCreator* data_val_list_creator)
+    static const int entry_max_size=1024; //之后设计为可修改
+public:
+    raw_DataEntry(char* raw_entry_data, int key_size)
     {
-        this.data_val_list_creator=data_val_list_creator;
-        int key_size = 12;//之后设计为可修改
-        int head_size = 16;//基本固定
-        entry_size = key_size + head_size;
-        this.entry_size+=data_val_list_creator->create(raw_entry_data, entry_data);
-    }
-
-    std::string get_key()
-    {
-        return key;
-    }
-
-    int get_group()
-    {
-        return group;
-    }
-
-    void add_val(std::string val_name, std::string new_val)
-    {
-        for(auto data_val: total_data)
+        is_valid = *(raw_entry_data);
+        if (is_valid)
         {
-            if(data_val->val_name == val_name)
-            {
-                entry_size+=data_val->add(new_val);
-                break;
-            }
-        }
-        if(entry_size>entry_max_size)
-        {
-            //新增group
+            entry_size = key_size + 1;
+            entry_key.append(raw_entry_data+1, key_size);
+            group = *((int*)(raw_entry_data+1+key_size));
+            entry_data=(raw_entry_data+1+key_size+8);
         }
     }
-
-    std::vector<std::string> to_raw_data()
+    std::string get_entry_val()
     {
-        //
+        return entry_data;
     }
+    char* to_raw_data()
+    {
 
+    }
+    bool is_valid()
+    {
+        return is_valid;
+    }
 };
 
-class DataBlock //用于写回时组织数据
+class DataEntry
 {
-    std::vector<DataEntry*> block;
+private:
+    std::string entry_key;
+    std::string entry_val;
+
+public:
+    DataEntry(std::string entry_key ,std::vector<raw_DataEntry*> raw_DataEntry_list) {
+        this->entry_val = "";
+        this->entry_key = entry_key;
+        for(auto raw_dataentry : raw_DataEntry_list) {
+            this->entry_val+=raw_dataentry->get_entry_val();
+        }
+    }
+};
+
+class raw_DataBlock //用于写回时组织数据
+{
+private:
+    std::vector<raw_DataEntry*> block;
     int entries_num;
     int max_entries_num;
 
-    DataBlock(int max_entries_num)
+public:
+    raw_DataBlock(int max_entries_num)
     {
-        this.max_entries_num = max_entries_num;
+        this->max_entries_num = max_entries_num;
     }
 
     int is_not_full()
@@ -148,9 +81,9 @@ class DataBlock //用于写回时组织数据
         //
     }
 
-    int add_entry(DataEntry* entry)
+    int add_entry(raw_DataEntry* entry)
     {
-        if(this.is_not_full())
+        if(this->is_not_full())
         {
             block.push_back(entry);
             entries_num++;
@@ -160,7 +93,7 @@ class DataBlock //用于写回时组织数据
     }
 
     
-}
+};
 
 class DataBitmap
 {
@@ -180,19 +113,17 @@ class DataBitmap
 
 class DataStack
 {
-    std::vector<DataEntry*> stack;
+    std::vector<raw_DataEntry*> stack;
     std::string table_name;
     int tree_level; 
 
-    DataValListCreator* data_val_list_creator;
     DataBitmap* data_bitmap;
 
-    DataStack(std::string table_name, DataValListCreator* data_val_list_creator, DataBitmap* data_bitmap, int tree_level)
+    DataStack(std::string table_name, DataBitmap* data_bitmap, int tree_level)
     {
-        this.table_name = table_name;
-        this.data_val_list_creator = data_val_list_creator;
-        this.data_bitmap = data_bitmap;
-        this.tree_level = tree_level;
+        this->table_name = table_name;
+        this->data_bitmap = data_bitmap;
+        this->tree_level = tree_level;
     }
 
     void read_entries(int path)
@@ -201,7 +132,7 @@ class DataStack
         read_block_from_file(table_name, path, raw_block_data);
         for(auto raw_entry_data : raw_block_data)
         {
-            DataEntry* new_data_entry = new DataEntry(raw_entry_data, data_val_list_creator);
+            raw_DataEntry* new_data_entry = new raw_DataEntry(raw_entry_data);
             stack.push_back(new_data_entry);
         }
     }
@@ -209,10 +140,10 @@ class DataStack
     void write_back_entries(int path, int entries_per_block)
     {
         reorder_entries();
-        std::vector<DataBlock*> write_back_blocks;
+        std::vector<raw_DataBlock*> write_back_blocks;
         for(int i=0;i<tree_level;++i)
         {
-            DataBlock* new_block = new DataBlock(entries_per_block);
+            raw_DataBlock* new_block = new raw_DataBlock(entries_per_block);
             write_back_blocks.push_back(new_block);
         }
 
@@ -271,13 +202,12 @@ class DataStack
         return entry_path == target_pos;
     }
 
-}
+};
 
 
 class DataTable
 {
     std::string table_name;
-    DataValListCreator* data_val_list_creator;
     DataBitmap* data_bitmap;
     DataStack* data_stack;
 
@@ -289,17 +219,17 @@ class DataTable
     
     DataTable(std::string table_name)
     {
-        this.table_name = table_name;
+        this->table_name = table_name;
         data_val_list_creator = new DataValListCreator(table_name);
         data_bitmap = new DataBitmap(table_name);
         data_stack = new DataStack(table_name, data_val_list_creator, data_bitmap, tree_level);
 
     }
 
-    add_data_entry(std::vector<std::string> data)
+    void add_data_entry(std::vector<std::string> data)
     {
         DataEntry* new_data_entry = new DataEntry(data);
-        temp_stack.push_back(new_data_entry);
+        // temp_stack.push_back(new_data_entry);
     }
 
 }
